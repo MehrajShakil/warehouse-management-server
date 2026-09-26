@@ -13,7 +13,7 @@ namespace WarehouseManagement.Application.Interfaces
 
         StockMovement DeleteStockMovement(StockMovement stockMovement);
 
-        StockMovement GetStockMovementById(Guid id);
+        StockMovement? GetStockMovementById(Guid id);
 
         List<StockMovement> GetStockMovementsByProductId(Guid productId);
 

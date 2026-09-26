@@ -13,7 +13,7 @@ namespace WarehouseManagement.Application.Interfaces
 
         Stock DeleteStock(Stock stock);
 
-        Stock GetStockById(Guid id);
+        Stock? GetStockById(Guid id);
 
         Stock? GetStockByProductAndWarehouse(Guid productId, Guid warehouseId);
 

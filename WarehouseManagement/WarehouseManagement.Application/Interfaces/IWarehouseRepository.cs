@@ -13,7 +13,7 @@ namespace WarehouseManagement.Application.Interfaces
 
         Warehouse DeleteWarehouse(Warehouse warehouse);
 
-        Warehouse GetWarehouseById(Guid id);
+        Warehouse? GetWarehouseById(Guid id);
 
         List<Warehouse> GetAllWarehouses(List<Guid>? warehouseIds);
     }

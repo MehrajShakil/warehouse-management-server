@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -22,6 +22,11 @@ namespace WarehouseManagement.Application.Services
 
         public UserDto CreateUser(CreateUserDto createUserDto)
         {
+            if (string.IsNullOrWhiteSpace(createUserDto.Password))
+            {
+                throw new ArgumentException("Password is required.");
+            }
+
             var user = new User
             {
                 UserName = createUserDto.UserName,
