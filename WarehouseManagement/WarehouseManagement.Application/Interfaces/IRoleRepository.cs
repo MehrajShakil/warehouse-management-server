@@ -13,7 +13,7 @@ namespace WarehouseManagement.Application.Interfaces
 
         Role DeleteRole(Role role);
 
-        Role GetRoleById(Guid id);
+        Role? GetRoleById(Guid id);
 
         List<Role> GetAllRoles(List<Guid>? roleIds);
     }

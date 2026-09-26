@@ -13,7 +13,7 @@ namespace WarehouseManagement.Application.Interfaces
 
         Product DeleteProduct(Product product);
 
-        Product GetProductById(Guid id);
+        Product? GetProductById(Guid id);
 
         Product? GetProductBySku(string sku);
 

@@ -13,7 +13,7 @@ namespace WarehouseManagement.Application.Interfaces
 
         bool DeleteUser(User user);
 
-        User GetUserById(Guid id);
+        User? GetUserById(Guid id);
 
         User? GetUserByUserNameOrEmail(string userNameOrEmail);
 

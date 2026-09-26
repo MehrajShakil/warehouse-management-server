@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WarehouseManagement.Application.Dtos;
 using WarehouseManagement.Application.Interfaces;
+using WarehouseManagement.Application.Services;
 
 namespace WarehouseManagement.API.Controllers
 {

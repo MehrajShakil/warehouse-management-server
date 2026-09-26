@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using WarehouseManagement.Application.Dtos;
 using WarehouseManagement.Application.Interfaces;
 using WarehouseManagement.Application.Security;
@@ -24,6 +24,11 @@ namespace WarehouseManagement.Application.Services
 
         public AuthResponseDto Register(CreateUserDto createUserDto)
         {
+            if (string.IsNullOrWhiteSpace(createUserDto.Password))
+            {
+                throw new ArgumentException("Password is required.");
+            }
+
             var existingUser = _userRepository.GetUserByUserNameOrEmail(createUserDto.UserName)
                 ?? _userRepository.GetUserByUserNameOrEmail(createUserDto.Email);
             if (existingUser != null)

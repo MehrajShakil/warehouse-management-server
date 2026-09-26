@@ -1,10 +1,14 @@
 ﻿using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.OpenApi.Models;
 using Microsoft.IdentityModel.Tokens;
+using WarehouseManagement.Application.Settings;
+using WarehouseManagement.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 using WarehouseManagement.Application.Interfaces;
 using WarehouseManagement.Application.Services;
-using WarehouseManagement.Application.Settings;
+using WarehouseManagement.Infrastructure.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -46,6 +50,9 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
+builder.Services
+    .AddDbContext<AppDbContext>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
 var jwtSettings = builder.Configuration.GetSection("Jwt").Get<JwtSettings>()
     ?? throw new InvalidOperationException("Jwt configuration section is missing.");
 
@@ -74,20 +81,56 @@ builder.Services
 
 builder.Services.AddAuthorization();
 
-//builder.Services.AddScoped<IProductService, ProductService>();
-//builder.Services.AddScoped<IUserService, UserService>();
-//builder.Services.AddScoped<IWarehouseService, WarehouseService>();
-//builder.Services.AddScoped<IStockService, StockService>();
-//builder.Services.AddScoped<IStockMovementService, StockMovementService>();
-//builder.Services.AddScoped<IRoleService, RoleService>();
-//builder.Services.AddScoped<IUserRoleService, UserRoleService>();
-//builder.Services.AddScoped<IAuthService, AuthService>();
-//builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IWarehouseService, WarehouseService>();
+builder.Services.AddScoped<IStockService, StockService>();
+builder.Services.AddScoped<IStockMovementService, StockMovementService>();
+builder.Services.AddScoped<IRoleService, RoleService>();
+builder.Services.AddScoped<IUserRoleService, UserRoleService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<ITokenService, TokenService>();
 
-////
-///
+builder.Services.AddScoped<IProductRepository, ProductRepository>();
+builder.Services.AddScoped<IWarehouseRepository, WarehouseRepository>();
+builder.Services.AddScoped<IStockRepository, StockRepository>();
+builder.Services.AddScoped<IStockMovementRepository, StockMovementRepository>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IRoleRepository, RoleRepository>();
+builder.Services.AddScoped<IUserRoleRepository, UserRoleRepository>();
+builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 
 var app = builder.Build();
+
+// Map the exceptions thrown by the application services to HTTP status codes.
+app.UseExceptionHandler(errorApp => errorApp.Run(async context =>
+{
+    var exception = context.Features.Get<IExceptionHandlerFeature>()?.Error;
+
+    var statusCode = exception switch
+    {
+        KeyNotFoundException => StatusCodes.Status404NotFound,
+        ArgumentException => StatusCodes.Status400BadRequest,
+        UnauthorizedAccessException => StatusCodes.Status401Unauthorized,
+        InvalidOperationException => StatusCodes.Status409Conflict,
+        DbUpdateException => StatusCodes.Status409Conflict,
+        _ => StatusCodes.Status500InternalServerError
+    };
+
+    var detail = statusCode == StatusCodes.Status500InternalServerError
+        ? "An unexpected error occurred."
+        : exception is DbUpdateException
+            ? "The change conflicts with existing data (for example a duplicate SKU, username or email)."
+            : exception?.Message;
+
+    await Results.Problem(detail: detail, statusCode: statusCode).ExecuteAsync(context);
+}));
+
+if (app.Configuration.GetValue<bool>("Database:ApplyMigrationsOnStartup"))
+{
+    using var scope = app.Services.CreateScope();
+    await scope.ServiceProvider.GetRequiredService<AppDbContext>().Database.MigrateAsync();
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
